@@ -1,4 +1,5 @@
 import sys
+import logging
 
 from ipGeocoder import IpGeocoderService
 from ipGeocoder import SqliteDatabase
@@ -29,6 +30,16 @@ def geocode_file(infile, col_name, database):
 
 if __name__ == '__main__':
     """
-    USAGE: python geocode_file.py ips_to_geocode.csv ip_addr geo_ips.sqlite
+    USAGE: python geocode_file.py ips_to_geocode.csv ip_addr ip_geo.sqlite
     """
+
+    # configure logging
+    logger = logging.getLogger('ipGeocoder')
+    logger.setLevel(logging.DEBUG)
+    ch = logging.StreamHandler()
+    formatter = logging.Formatter('%(asctime)s [ %(levelname)-8s ] %(name)-30s - %(message)s')
+    ch.setFormatter(formatter)
+    logger.addHandler(ch)
+
+    # do geocoding
     geocode_file(sys.argv[1], sys.argv[2], sys.argv[3])

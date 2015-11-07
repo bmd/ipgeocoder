@@ -1,0 +1,15 @@
+# IDE settings
+.idea/
+
+# virtual environment
+venv/
+
+# any databases
+*.sqlite
+
+# any flatfiles
+*.csv
+*.tsv
+
+# bytecode
+*.pyc

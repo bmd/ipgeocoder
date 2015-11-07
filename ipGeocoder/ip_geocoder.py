@@ -1,4 +1,4 @@
-import geocoder
+import geo
 
 
 class IpGeocoder(object):

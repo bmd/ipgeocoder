@@ -1,6 +1,10 @@
 """
-@package ipGeocoder.service
+@package ipGeocoder
 """
 from service import IpGeocoderService
 from database import SqliteDatabase
-from geocoder import IpGeocoder
+from geo import IpGeocoder
+
+# silence base logger
+import logging
+logger = logging.getLogger('ipGeocoder').addHandler(logging.NullHandler())
