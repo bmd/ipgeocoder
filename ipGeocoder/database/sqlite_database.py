@@ -1,5 +1,3 @@
-# coding: utf-8
-
 import logging
 import os
 import sqlite3 as sqlite
@@ -16,8 +14,8 @@ class SqlStatements(object):
     retrieve_row = "SELECT * FROM ip_geo WHERE ip_hash = ? LIMIT 1"
 
     insert_row = (
-        "INSERT INTO ip_geo (ip_hash, ip_str, city, state, country, postal, latitude, longitude, timezone"
-        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);"
+        "INSERT INTO ip_geo (ip_hash, ip_str, city, state, country, postal, "
+        " latitude, longitude, timezone) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);"
     )
 
 

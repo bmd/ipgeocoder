@@ -1,6 +1,5 @@
 import unicodecsv as csv
 import logging
-from datetime import timedelta
 
 logger = logging.getLogger("ipGeocoder.IpGeocoderService")
 
@@ -33,10 +32,10 @@ class IpGeocoderService(object):
 
     def _geocode_row(self, r):
         """
-        Geocode a row and store it in the database. If the row is already stored
-        in the database, and hasn't expired, based on the value set in
-        IpGeocoderService.cache_expires_days, then _geocode_row() will return
-        the current database row.
+        Geocode a row and store it in the database. If the row is already
+        stored in the database, and hasn't expired, based on the value set
+        in IpGeocoderService.cache_expires_days, then _geocode_row() will
+        return the current database row.
 
         :param r: A dict-like object
         :return: boolean
