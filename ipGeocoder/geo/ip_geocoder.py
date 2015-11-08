@@ -21,5 +21,5 @@ class IpGeocoder(object):
         :return: Dict
         """
         ip = obj[self.col_name]
-
+        logger.info("Geocoding IP address: {0}".format(ip))
         return geocoder.freegeoip(ip)

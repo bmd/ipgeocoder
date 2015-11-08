@@ -19,8 +19,8 @@ def geocode_file(infile, col_name, database):
     :return: true
     """
     service = IpGeocoderService(
-        SqliteDatabase(database),
         IpGeocoder(ip_addr_col_name=col_name),
+        SqliteDatabase(database),
         infile
     )
 

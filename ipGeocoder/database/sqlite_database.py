@@ -1,6 +1,7 @@
 import logging
 import os
 import sqlite3 as sqlite
+import hashlib
 
 from database import DatabaseAbstract
 
@@ -13,6 +14,24 @@ class SqliteDatabase(DatabaseAbstract):
         logger.info("Constructing database connector")
         super(SqliteDatabase, self).__init__()
         self.conn = self._connect(path)
+
+    @staticmethod
+    def _int_hash_ip(ip, n=10):
+        """
+        Hash an IP and return an integer representation of the hashed
+        value. This is useful because we want to look up the IPs in
+        a SQLITE database, but don't want to use a string as the row
+        PK. This provides a way to infer the PK of a row deterministically
+        from the IP input.
+
+        :param ip: The IP address to hash
+        :param n: The length of the integer to return. This must be less than
+            the maximum integer length allowed by the data storage type.
+        :return: An integer representation of the IP address
+        """
+        ip_hash = int(hashlib.sha1(ip).hexdigest(), 16) % (10 ** n)
+
+        return ip_hash
 
     def _connect(self, credentials):
         """
@@ -47,17 +66,17 @@ class SqliteDatabase(DatabaseAbstract):
 
         c.execute("""
           INSERT INTO ip_geo (
-            ip_hash, ip_str, city, state, country, postal, create_dt, update_dt
+            ip_hash, ip_str, city, state, country, postal, latitude, longitude, timezone
           ) VALUES (
-            ?, ?, ?, ?, ?, ?, ?, ?
+            ?, ?, ?, ?, ?, ?, ?, ?, ?
           );
-        """, (hex(data['ip']), data['ip']))
+        """, (self._int_hash_ip(data['ip']), data['ip'], data['city'], data['state'], data['country'], data['postal'], data['lat'], data['lng'], data['time_zone'])
+        )
+        self.conn.commit()
+
+        return True
 
     def retrieve(self, ip):
-        logger.debug("")
-        super(SqliteDatabase, self).retrieve(ip)
-
         c = self.conn.cursor()
-        row = c.execute("SELECT * FROM ip_geo WHERE ip_hash = ? LIMIT 1", hex(ip))
-
+        row = c.execute("SELECT * FROM ip_geo WHERE ip_hash = ? LIMIT 1", (self._int_hash_ip(ip), ))
         return row
