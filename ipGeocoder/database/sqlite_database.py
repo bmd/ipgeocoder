@@ -1,11 +1,24 @@
+# coding: utf-8
+
 import logging
 import os
 import sqlite3 as sqlite
 import hashlib
 
-from database import DatabaseAbstract
+from .database import DatabaseAbstract
 
 logger = logging.getLogger("ipGeocoder.SqliteDatabase")
+
+
+class SqlStatements(object):
+    """ Avoid hardcoding these into the database class"""
+
+    retrieve_row = "SELECT * FROM ip_geo WHERE ip_hash = ? LIMIT 1"
+
+    insert_row = (
+        "INSERT INTO ip_geo (ip_hash, ip_str, city, state, country, postal, latitude, longitude, timezone"
+        ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);"
+    )
 
 
 class SqliteDatabase(DatabaseAbstract):
@@ -14,6 +27,7 @@ class SqliteDatabase(DatabaseAbstract):
         logger.info("Constructing database connector")
         super(SqliteDatabase, self).__init__()
         self.conn = self._connect(path)
+        self.conn.text_factory = str
 
     @staticmethod
     def _int_hash_ip(ip, n=10):
@@ -25,8 +39,9 @@ class SqliteDatabase(DatabaseAbstract):
         from the IP input.
 
         :param ip: The IP address to hash
-        :param n: The length of the integer to return. This must be less than
-            the maximum integer length allowed by the data storage type.
+        :param n: (optional) The length of the integer to return. This must
+            be less than the maximum integer length allowed by the data
+            storage type.
         :return: An integer representation of the IP address
         """
         ip_hash = int(hashlib.sha1(ip).hexdigest(), 16) % (10 ** n)
@@ -38,7 +53,7 @@ class SqliteDatabase(DatabaseAbstract):
         Connect to the sqlite database. If no database
         exists, an error will be raised.
 
-        :param credentials: The database path
+        :param credentials: The database path on disk
         :return: sqlite3.connection
         :raises IOError:
         """
@@ -63,14 +78,18 @@ class SqliteDatabase(DatabaseAbstract):
         logger.debug("Caching ip '{0}' in database".format(data['ip']))
 
         c = self.conn.cursor()
-
-        c.execute("""
-          INSERT INTO ip_geo (
-            ip_hash, ip_str, city, state, country, postal, latitude, longitude, timezone
-          ) VALUES (
-            ?, ?, ?, ?, ?, ?, ?, ?, ?
-          );
-        """, (self._int_hash_ip(data['ip']), data['ip'], data['city'], data['state'], data['country'], data['postal'], data['lat'], data['lng'], data['time_zone'])
+        c.execute(
+            SqlStatements.insert_row, (
+                self._int_hash_ip(data['ip']),
+                data['ip'],
+                data['city'] if 'city' in data else None,
+                data['state'] if 'state' in data else None,
+                data['country'] if 'country' in data else None,
+                data['postal'] if 'postal' in data else None,
+                data['lat'] if 'lat' in data else None,
+                data['lng'] if 'lng' in data else None,
+                data['time_zone'] if 'time_zone' in data else None
+            )
         )
         self.conn.commit()
 
@@ -78,5 +97,10 @@ class SqliteDatabase(DatabaseAbstract):
 
     def retrieve(self, ip):
         c = self.conn.cursor()
-        row = c.execute("SELECT * FROM ip_geo WHERE ip_hash = ? LIMIT 1", (self._int_hash_ip(ip), ))
-        return row
+        row = c.execute(SqlStatements.retrieve_row, (self._int_hash_ip(ip), ))
+        result = row.fetchall()
+
+        try:
+            return result[0]
+        except IndexError:
+            return []
